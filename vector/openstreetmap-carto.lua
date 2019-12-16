@@ -122,7 +122,13 @@ local delete_tags = {
     'import',
     'import_uuid',
     'OBJTYPE',
-    'SK53_bulk:load'
+    'SK53_bulk:load',
+
+    -- extra-attributes that we're not using
+    'osm_user',
+    'osm_uid',
+    'osm_version',
+    'osm_changeset'
 }
 delete_prefixes = {
     'note:',
@@ -268,6 +274,8 @@ end
 -- @param tags Raw OSM tags
 -- @return Filtered OSM tags
 function filter_tags_generic(tags)
+    local empty = true
+
     -- Short-circuit for untagged objects
     if next(tags) == nil then
         return 1, {}
@@ -288,8 +296,17 @@ function filter_tags_generic(tags)
         end
     end
 
-   -- Filter out objects that have no tags after deleting
-    if next(tags) == nil then
+    -- keep track of whether there are any tags other than "osm_timestamp". if
+    -- that's the only tag then we don't wan to keep the object.
+    for tag, _ in pairs (tags) do
+        if not (tag == 'osm_timestamp') then
+            empty = false
+            break
+        end
+    end
+
+    -- Filter out objects that have no tags after deleting
+    if empty then
         return 1, {}
     end
 
